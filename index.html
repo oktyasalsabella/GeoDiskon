@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GeoDiskon — Simulasi Peluruhan Diskon</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="nav-inner">
+      <div class="nav-brand">
+        <span class="brand-icon">◈</span>
+        <span class="brand-name">GeoDiskon</span>
+      </div>
+      <div class="nav-tabs">
+        <button class="nav-tab active" onclick="showTab('simulasi')" id="tab-simulasi">
+          <span>⟁ Simulasi</span>
+        </button>
+        <button class="nav-tab" onclick="showTab('panduan')" id="tab-panduan">
+          <span>⊡ Panduan</span>
+        </button>
+      </div>
+      <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
+        <span id="theme-icon">☀</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- PAGE: SIMULASI -->
+  <div id="page-simulasi" class="page active">
+    <div class="container">
+
+      <div class="page-header">
+        <div class="header-badge">Matematika · Kalkulus · Deret Geometri</div>
+        <h1 class="page-title">Peluruhan <em>Diskon</em></h1>
+        <p class="page-subtitle">Simulasi interaktif harga yang meluruh mengikuti pola deret geometri dengan rasio konstan setiap pembelian</p>
+      </div>
+
+      <div class="main-grid">
+
+        <!-- Input Panel -->
+        <aside class="input-panel">
+          <div class="panel-label">Parameter Input</div>
+
+          <div class="input-group">
+            <label class="input-label">Harga Awal <code class="param-code">a</code></label>
+            <div class="input-wrapper">
+              <span class="input-prefix">Rp</span>
+              <input type="number" id="harga" value="100000" min="0" class="form-input">
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label class="input-label">Diskon per Pembelian <code class="param-code">d</code></label>
+            <div class="input-wrapper">
+              <input type="number" id="diskon" value="10" min="1" max="99" step="1" class="form-input">
+              <span class="input-suffix">%</span>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label class="input-label">Jumlah Pembelian <code class="param-code">n</code></label>
+            <div class="slider-header">
+              <span class="slider-desc">Geser untuk mengubah</span>
+              <div class="n-badge" id="n-out">8</div>
+            </div>
+            <input type="range" id="slider-n" min="1" max="100" value="8" step="1" class="slider">
+            <div class="slider-track-labels"><span>1</span><span>50</span><span>100</span></div>
+          </div>
+
+          <button class="play-btn" id="play-btn" onclick="toggleAnimation()">
+            <span id="play-icon">▶</span>
+            <span id="play-label">Play Simulasi</span>
+          </button>
+
+          <div class="anim-progress" id="anim-progress" style="display:none;">
+            <div class="anim-step-label">Pembelian ke-<span id="anim-step">1</span></div>
+            <div class="anim-bar-bg"><div class="anim-bar-fill" id="anim-bar"></div></div>
+          </div>
+        </aside>
+
+        <!-- Right Column -->
+        <div class="right-col">
+          <div class="formula-box">
+            <div class="formula-label-top">∑ Rumus Deret Geometri</div>
+            <div id="formula-box" class="formula-content"></div>
+          </div>
+          <div class="metrics-grid" id="metrics"></div>
+        </div>
+      </div>
+
+      <!-- Chart -->
+      <div class="section-card">
+        <div class="section-header">
+          <h2 class="section-title">Kurva Peluruhan</h2>
+          <p class="section-desc">Penurunan harga mengikuti fungsi eksponensial U<sub>n</sub> = a · r<sup>n−1</sup></p>
+        </div>
+        <div class="chart-wrap"><canvas id="chart"></canvas></div>
+        <div id="legend" class="chart-legend"></div>
+      </div>
+
+      <!-- Table -->
+      <div class="section-card">
+        <div class="section-header">
+          <h2 class="section-title">Tabel Perhitungan</h2>
+          <p class="section-desc">Rincian setiap pembelian berdasarkan rumus deret geometri</p>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Harga ke-n</th>
+                <th>Potongan</th>
+                <th class="hide-mobile">Rumus U<sub>n</sub></th>
+                <th>Sisa %</th>
+              </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- PAGE: PANDUAN -->
+  <div id="page-panduan" class="page" style="display:none;">
+    <div class="container">
+
+      <div class="page-header">
+        <div class="header-badge">Dokumentasi & Teori</div>
+        <h1 class="page-title">Buku <em>Panduan</em></h1>
+        <p class="page-subtitle">Referensi lengkap seputar konsep deret geometri, cara penggunaan simulator, dan teori matematika di baliknya</p>
+      </div>
+
+      <div class="guide-grid">
+
+        <aside class="guide-nav-panel">
+          <div class="panel-label">Navigasi Cepat</div>
+          <ul class="guide-nav-list">
+            <li><a href="#sec-apa" class="guide-nav-link">↳ Apa itu Deret Geometri?</a></li>
+            <li><a href="#sec-peluruhan" class="guide-nav-link">↳ Peluruhan Diskon</a></li>
+            <li><a href="#sec-rumus" class="guide-nav-link">↳ Rumus & Teori</a></li>
+            <li><a href="#sec-cara" class="guide-nav-link">↳ Cara Pakai Simulator</a></li>
+            <li><a href="#sec-contoh" class="guide-nav-link">↳ Contoh Kasus</a></li>
+            <li><a href="#sec-faq" class="guide-nav-link">↳ FAQ</a></li>
+          </ul>
+        </aside>
+
+        <main class="guide-content">
+
+          <section class="guide-section" id="sec-apa">
+            <div class="guide-badge">01</div>
+            <h2 class="guide-section-title">Apa itu Deret Geometri?</h2>
+            <p class="guide-text"><strong>Deret geometri</strong> adalah barisan bilangan di mana setiap suku berikutnya diperoleh dengan mengalikan suku sebelumnya dengan suatu bilangan tetap yang disebut <em>rasio (r)</em>.</p>
+            <div class="callout callout-info">
+              <span>💡</span>
+              <div><strong>Definisi:</strong> Barisan a, ar, ar², ar³, ..., arⁿ⁻¹ adalah barisan geometri jika rasio antara suku berturut-turut selalu konstan.</div>
+            </div>
+            <p class="guide-text">Contoh barisan geometri dengan a = 100 dan r = 0.8:</p>
+            <div class="code-block mono">100 → 80 → 64 → 51.2 → 40.96 → ...<br><span style="opacity:0.5">      ×0.8  ×0.8  ×0.8   ×0.8</span></div>
+          </section>
+
+          <section class="guide-section" id="sec-peluruhan">
+            <div class="guide-badge">02</div>
+            <h2 class="guide-section-title">Peluruhan Diskon</h2>
+            <p class="guide-text"><strong>Peluruhan diskon</strong> terjadi ketika sebuah toko memberikan diskon bertingkat — setiap pembelian berturut-turut mendapat harga lebih murah dengan persentase diskon yang konstan terhadap harga pembelian sebelumnya.</p>
+            <div class="callout callout-warning">
+              <span>⚠</span>
+              <div><strong>Penting:</strong> Diskon diterapkan terhadap <em>harga pembelian sebelumnya</em>, bukan harga awal. Inilah yang membentuk pola deret geometri.</div>
+            </div>
+            <div class="example-flow">
+              <div class="flow-item"><span class="flow-num">1</span><div><div class="flow-label">Pembelian ke-1</div><div class="flow-val">Rp 100.000 <span class="flow-note">(harga normal)</span></div></div></div>
+              <div class="flow-arrow">↓ diskon 20%</div>
+              <div class="flow-item"><span class="flow-num">2</span><div><div class="flow-label">Pembelian ke-2</div><div class="flow-val">Rp 80.000</div></div></div>
+              <div class="flow-arrow">↓ diskon 20%</div>
+              <div class="flow-item"><span class="flow-num">3</span><div><div class="flow-label">Pembelian ke-3</div><div class="flow-val">Rp 64.000</div></div></div>
+              <div class="flow-arrow">↓ dan seterusnya...</div>
+            </div>
+          </section>
+
+          <section class="guide-section" id="sec-rumus">
+            <div class="guide-badge">03</div>
+            <h2 class="guide-section-title">Rumus & Teori</h2>
+            <div class="formula-card-guide">
+              <div class="fc-label">Rasio (r)</div>
+              <div class="fc-eq mono">r = 1 − (d / 100)</div>
+              <div class="fc-desc">d = persentase diskon. Jika diskon 20%, maka r = 0.80</div>
+            </div>
+            <div class="formula-card-guide">
+              <div class="fc-label">Suku ke-n (Harga Pembelian ke-n)</div>
+              <div class="fc-eq mono">U<sub>n</sub> = a × r<sup>n−1</sup></div>
+              <div class="fc-desc">a = harga awal, r = rasio, n = nomor pembelian</div>
+            </div>
+            <div class="formula-card-guide">
+              <div class="fc-label">Total Pengeluaran (Jumlah Deret)</div>
+              <div class="fc-eq mono">S<sub>n</sub> = a(1 − r<sup>n</sup>) / (1 − r)</div>
+              <div class="fc-desc">Total uang yang dikeluarkan untuk n pembelian</div>
+            </div>
+            <div class="formula-card-guide accent">
+              <div class="fc-label">Konvergensi (n → ∞)</div>
+              <div class="fc-eq mono">S<sub>∞</sub> = a / (1 − r)</div>
+              <div class="fc-desc">Batas maksimum total pengeluaran jika pembelian tak terhingga</div>
+            </div>
+          </section>
+
+          <section class="guide-section" id="sec-cara">
+            <div class="guide-badge">04</div>
+            <h2 class="guide-section-title">Cara Pakai Simulator</h2>
+            <div class="steps-list">
+              <div class="step-item"><div class="step-num">1</div><div><div class="step-title">Atur Harga Awal (a)</div><div class="step-desc">Masukkan harga produk pada pembelian pertama — ini adalah suku pertama U₁ deret geometri.</div></div></div>
+              <div class="step-item"><div class="step-num">2</div><div><div class="step-title">Atur Diskon (d)</div><div class="step-desc">Persentase diskon konstan yang diberikan setiap pembelian. Ini menentukan rasio r = 1 − d/100.</div></div></div>
+              <div class="step-item"><div class="step-num">3</div><div><div class="step-title">Geser Slider n</div><div class="step-desc">Tentukan berapa kali pembelian yang disimulasikan. Grafik & tabel otomatis terupdate real-time.</div></div></div>
+              <div class="step-item"><div class="step-num">4</div><div><div class="step-title">Tekan Play ▶</div><div class="step-desc">Lihat animasi step-by-step bagaimana harga meluruh secara bertahap dari pembelian pertama hingga ke-n.</div></div></div>
+              <div class="step-item"><div class="step-num">5</div><div><div class="step-title">Analisis Hasil</div><div class="step-desc">Baca metrics, amati kurva eksponensial pada grafik, dan cek tabel detail untuk setiap pembelian.</div></div></div>
+            </div>
+          </section>
+
+          <section class="guide-section" id="sec-contoh">
+            <div class="guide-badge">05</div>
+            <h2 class="guide-section-title">Contoh Kasus</h2>
+            <p class="guide-text">Toko elektronik memberikan diskon 15% untuk setiap pembelian berikutnya. Harga awal Rp 100.000.</p>
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead><tr><th>Pembelian ke-</th><th>Rumus</th><th>Harga</th></tr></thead>
+                <tbody>
+                  <tr><td>1</td><td class="mono">100.000 × 0.85⁰</td><td class="mono">Rp 100.000</td></tr>
+                  <tr><td>2</td><td class="mono">100.000 × 0.85¹</td><td class="mono">Rp 85.000</td></tr>
+                  <tr><td>3</td><td class="mono">100.000 × 0.85²</td><td class="mono">Rp 72.250</td></tr>
+                  <tr><td>4</td><td class="mono">100.000 × 0.85³</td><td class="mono">Rp 61.413</td></tr>
+                  <tr><td>5</td><td class="mono">100.000 × 0.85⁴</td><td class="mono">Rp 52.201</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="callout callout-success">
+              <span>✓</span>
+              <div><strong>Total 5 pembelian:</strong> S₅ = Rp 370.864 (hemat Rp 129.136 dari harga normal!)</div>
+            </div>
+          </section>
+
+          <section class="guide-section" id="sec-faq">
+            <div class="guide-badge">06</div>
+            <h2 class="guide-section-title">FAQ</h2>
+            <div class="faq-list">
+              <details class="faq-item">
+                <summary class="faq-q">Mengapa harga tidak pernah benar-benar mencapai nol?</summary>
+                <div class="faq-a">Karena setiap suku dikalikan rasio 0 &lt; r &lt; 1 — hasilnya selalu positif. Secara matematis, lim(n→∞) arⁿ⁻¹ = 0 tetapi tidak pernah benar-benar nol untuk n terhingga.</div>
+              </details>
+              <details class="faq-item">
+                <summary class="faq-q">Apa bedanya deret geometri dengan deret aritmatika?</summary>
+                <div class="faq-a">Deret aritmatika menurun dengan selisih tetap (−10.000 setiap kali). Deret geometri menurun dengan rasio tetap (×0.9 setiap kali). Peluruhan diskon lebih tepat dimodelkan dengan geometri karena persentasenya konstan.</div>
+              </details>
+              <details class="faq-item">
+                <summary class="faq-q">Apa aplikasi nyata lain dari deret geometri?</summary>
+                <div class="faq-a">Peluruhan radioaktif, bunga majemuk, pertumbuhan populasi, depresiasi aset, sinyal audio yang melemah, fraktal matematika, dan binary search dalam ilmu komputer.</div>
+              </details>
+              <details class="faq-item">
+                <summary class="faq-q">Apa artinya deret "konvergen"?</summary>
+                <div class="faq-a">Deret geometri konvergen jika jumlah totalnya mendekati nilai tertentu ketika n → ∞. Syaratnya: |r| &lt; 1. Dalam simulasi ini, karena diskon &gt; 0%, r selalu &lt; 1, jadi deret selalu konvergen.</div>
+              </details>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
